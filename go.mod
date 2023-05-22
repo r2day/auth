@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/r2day/base v1.6.7
 	github.com/r2day/collections v1.1.3
-	github.com/r2day/rest v0.7.2
+	github.com/r2day/rest v0.2.8
 	github.com/sirupsen/logrus v1.9.2
 	go.mongodb.org/mongo-driver v1.11.6
 )
