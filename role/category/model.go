@@ -27,4 +27,6 @@ type Model struct {
 	Name string `json:"name" bson:"name"`
 	// 描述
 	Desc string `json:"desc" bson:"desc"`
+	// 引用次数
+	Reference uint `json:"reference" bson:"reference"`
 }

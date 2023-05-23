@@ -11,7 +11,7 @@ const (
 	// 例如, _log, _config, _flow,
 	collectionNameSuffix = "_category"
 	// 这个需要用户根据具体业务完成设定
-	modelName = "app"
+	modelName = "account"
 )
 
 // 每一个应用表示一个大的模块，通常其子模块是一个个接口

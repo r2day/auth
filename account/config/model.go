@@ -14,7 +14,7 @@ const (
 	// 例如, _log, _config, _flow,
 	collectionNameSuffix = "_config"
 	// 这个需要用户根据具体业务完成设定
-	modelName = "role"
+	modelName = "account"
 )
 
 // 每一个应用表示一个大的模块，通常其子模块是一个个接口
@@ -30,39 +30,27 @@ type Model struct {
 	ID primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	// 基本的数据库模型字段，一般情况所有model都应该包含如下字段
 	Meta auth.MetaModel `json:"meta" bson:"meta"`
-	// 名称
-	Name string `json:"name" bson:"name"`
-	// 描述
-	Desc string `json:"desc" bson:"desc"`
 	// 分类/ 亦或则是分组等
 	Category string `json:"category" bson:"category"`
-	// 图片
-	Image string `json:"image" bson:"image"`
-	// 应用列表
-	// 存储应用的id
-	// 通过应用id 快速获得应用列表
-	Apps []string `json:"apps" bson:"apps"`
-	// 权限
-	Permissions []PermissionsModel `json:"permissions" bson:"permissions"`
-}
-
-// PermissionsModel 模型
-// 记录角色对接口的操作细节
-type PermissionsModel struct {
-	// 角色编号
-	RoleID string `json:"role_id" bson:"role_id"`
-	// 应用编号
-	AppID string `json:"app_id" bson:"app_id"`
-	// 请求路径
-	Path string `json:"path" bson:"path"`
-	// 读
-	Read bool `json:"read" bson:"read"`
-	// 写
-	Write bool `json:"write" bson:"write"`
-	// 改
-	Update bool `json:"update" bson:"update"`
-	// 详情
-	Detail bool `json:"detail" bson:"detail"`
-	// 删除
-	Delete bool `json:"delete" bson:"delete"`
+	// IsAdmin 是否是管理员
+	// 一般standalone 模式下，是通过读取部署时配置的 ADMIN_PHONE
+	// 如果与配置的手机号匹配，那么就可以定义为管理员
+	// 如果是其他的模式，一般需要超级商户平台授权后才能成为管理员
+	IsAdmin bool `json:"is_admin"  bson:"is_admin"`
+	// 关键信息
+	// 手机号
+	Phone string `json:"phone"`
+	// 密码
+	Password string `json:"password"  bson:"password"`
+	// 是否开启审核
+	IsRequiredApprove bool `json:"is_required_approve" bson:"is_required_approve"`
+	// 更多信息
+	// 账号名称
+	Name string `json:"name"`
+	// 描述
+	Desc string `json:"desc"  bson:"desc"`
+	// 邮箱
+	Email string `json:"email"  bson:"email"`
+	// 角色名称列表
+	Roles []string `json:"roles"  bson:"roles"`
 }

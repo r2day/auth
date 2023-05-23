@@ -146,52 +146,6 @@ func (m *Model) Update(ctx context.Context, id string) error {
 	return nil
 }
 
-// IncrementReference 更新
-// https://www.mongodb.com/docs/manual/reference/operator/update/inc/
-func (m *Model) IncrementReference(ctx context.Context, id string) error {
-	coll := db.MDB.Collection(m.CollectionName())
-	objID, _ := primitive.ObjectIDFromHex(id)
-	filter := bson.D{{Key: "_id", Value: objID}}
-	// 设定更新时间
-	m.UpdatedAt = rtime.FomratTimeAsReader(time.Now().Unix())
-
-	result, err := coll.UpdateOne(ctx, filter,
-		bson.D{{Key: "$set", Value: bson.D{{"reference", 1}}}})
-	if err != nil {
-		log.WithField("id", id).Error(err)
-		return err
-	}
-
-	if result.MatchedCount < 1 {
-		log.WithField("id", id).Warning("no matched record")
-		return nil
-	}
-	return nil
-}
-
-// DecrementReference 更新
-// https://www.mongodb.com/docs/manual/reference/operator/update/inc/
-func (m *Model) DecrementReference(ctx context.Context, id string) error {
-	coll := db.MDB.Collection(m.CollectionName())
-	objID, _ := primitive.ObjectIDFromHex(id)
-	filter := bson.D{{Key: "_id", Value: objID}}
-	// 设定更新时间
-	m.UpdatedAt = rtime.FomratTimeAsReader(time.Now().Unix())
-
-	result, err := coll.UpdateOne(ctx, filter,
-		bson.D{{Key: "$set", Value: bson.D{{"reference", -1}}}})
-	if err != nil {
-		log.WithField("id", id).Error(err)
-		return err
-	}
-
-	if result.MatchedCount < 1 {
-		log.WithField("id", id).Warning("no matched record")
-		return nil
-	}
-	return nil
-}
-
 // GetList 获取列表
 // getList	GET http://my.api.url/posts?sort=["title","ASC"]&range=[0, 24]&filter={"title":"bar"}
 func (m *Model) GetList(ctx context.Context, merchantID string, accountID string, urlParams *rest.UrlParams) ([]*Model, int64, error) {

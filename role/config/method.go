@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"github.com/r2day/auth/role/category"
 	"time"
 
 	db "github.com/r2day/auth"
@@ -31,9 +32,9 @@ func (m *Model) Create(ctx context.Context) (string, error) {
 	coll := db.MDB.Collection(m.CollectionName())
 
 	// 保存时间设定
-	m.CreatedAt = rtime.FomratTimeAsReader(time.Now().Unix())
+	m.Meta.CreatedAt = rtime.FomratTimeAsReader(time.Now().Unix())
 	// 更新时间设定
-	m.UpdatedAt = rtime.FomratTimeAsReader(time.Now().Unix())
+	m.Meta.UpdatedAt = rtime.FomratTimeAsReader(time.Now().Unix())
 
 	// 插入记录
 	result, err := coll.InsertOne(ctx, m)
@@ -42,6 +43,14 @@ func (m *Model) Create(ctx context.Context) (string, error) {
 		return "", err
 	}
 	stringObjectID := result.InsertedID.(primitive.ObjectID).Hex()
+
+	// 更新引用次数
+	cg := &category.Model{}
+	err = cg.IncrementReference(ctx, m.Category)
+	if err != nil {
+		log.WithField("m", m).Error(err)
+		return "", err
+	}
 	return stringObjectID, nil
 }
 
@@ -65,6 +74,14 @@ func (m *Model) Delete(ctx context.Context, id string) error {
 	if result.DeletedCount < 1 {
 		logCtx.Warning("result.DeletedCount < 1")
 		return nil
+	}
+
+	// 更新引用次数
+	cg := &category.Model{}
+	err = cg.DecrementReference(ctx, m.Category)
+	if err != nil {
+		log.WithField("m", m).Error(err)
+		return err
 	}
 	return nil
 }
@@ -130,7 +147,7 @@ func (m *Model) Update(ctx context.Context, id string) error {
 	objID, _ := primitive.ObjectIDFromHex(id)
 	filter := bson.D{{Key: "_id", Value: objID}}
 	// 设定更新时间
-	m.UpdatedAt = rtime.FomratTimeAsReader(time.Now().Unix())
+	m.Meta.UpdatedAt = rtime.FomratTimeAsReader(time.Now().Unix())
 
 	result, err := coll.UpdateOne(ctx, filter, bson.D{{Key: "$set", Value: m}})
 	if err != nil {
@@ -158,7 +175,8 @@ func (m *Model) GetList(ctx context.Context, merchantID string, accountID string
 	// 定义基本过滤规则
 	// 以商户id为基本命名空间
 	// 并且只能看到小于等于自己的级别的数据
-	filters := bson.D{{Key: "merchant_id", Value: merchantID}, {"access_level", bson.D{{"$lte", m.AccessLevel}}}}
+	filters := bson.D{{Key: "meta.merchant_id", Value: merchantID},
+		{"meta.access_level", bson.D{{"$lte", m.Meta.AccessLevel}}}}
 	// 添加更多过滤器
 	// 根据用户规则进行筛选
 	for key, val := range urlParams.FilterMap {
@@ -184,7 +202,7 @@ func (m *Model) GetList(ctx context.Context, merchantID string, accountID string
 
 	// 添加状态过滤器
 	if urlParams.HasFilter {
-		filterByStatus := bson.E{Key: "status", Value: urlParams.FilterCommon.Status}
+		filterByStatus := bson.E{Key: "meta.status", Value: urlParams.FilterCommon.Status}
 		filters = append(filters, filterByStatus)
 	}
 

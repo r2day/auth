@@ -1,4 +1,4 @@
-package category
+package config
 
 import (
 	"context"
@@ -31,9 +31,9 @@ func (m *Model) Create(ctx context.Context) (string, error) {
 	coll := db.MDB.Collection(m.CollectionName())
 
 	// 保存时间设定
-	m.CreatedAt = rtime.FomratTimeAsReader(time.Now().Unix())
+	m.Meta.CreatedAt = rtime.FomratTimeAsReader(time.Now().Unix())
 	// 更新时间设定
-	m.UpdatedAt = rtime.FomratTimeAsReader(time.Now().Unix())
+	m.Meta.UpdatedAt = rtime.FomratTimeAsReader(time.Now().Unix())
 
 	// 插入记录
 	result, err := coll.InsertOne(ctx, m)
@@ -130,7 +130,7 @@ func (m *Model) Update(ctx context.Context, id string) error {
 	objID, _ := primitive.ObjectIDFromHex(id)
 	filter := bson.D{{Key: "_id", Value: objID}}
 	// 设定更新时间
-	m.UpdatedAt = rtime.FomratTimeAsReader(time.Now().Unix())
+	m.Meta.UpdatedAt = rtime.FomratTimeAsReader(time.Now().Unix())
 
 	result, err := coll.UpdateOne(ctx, filter, bson.D{{Key: "$set", Value: m}})
 	if err != nil {
@@ -146,52 +146,6 @@ func (m *Model) Update(ctx context.Context, id string) error {
 	return nil
 }
 
-// IncrementReference 更新
-// https://www.mongodb.com/docs/manual/reference/operator/update/inc/
-func (m *Model) IncrementReference(ctx context.Context, id string) error {
-	coll := db.MDB.Collection(m.CollectionName())
-	objID, _ := primitive.ObjectIDFromHex(id)
-	filter := bson.D{{Key: "_id", Value: objID}}
-	// 设定更新时间
-	m.UpdatedAt = rtime.FomratTimeAsReader(time.Now().Unix())
-
-	result, err := coll.UpdateOne(ctx, filter,
-		bson.D{{Key: "$set", Value: bson.D{{"reference", 1}}}})
-	if err != nil {
-		log.WithField("id", id).Error(err)
-		return err
-	}
-
-	if result.MatchedCount < 1 {
-		log.WithField("id", id).Warning("no matched record")
-		return nil
-	}
-	return nil
-}
-
-// DecrementReference 更新
-// https://www.mongodb.com/docs/manual/reference/operator/update/inc/
-func (m *Model) DecrementReference(ctx context.Context, id string) error {
-	coll := db.MDB.Collection(m.CollectionName())
-	objID, _ := primitive.ObjectIDFromHex(id)
-	filter := bson.D{{Key: "_id", Value: objID}}
-	// 设定更新时间
-	m.UpdatedAt = rtime.FomratTimeAsReader(time.Now().Unix())
-
-	result, err := coll.UpdateOne(ctx, filter,
-		bson.D{{Key: "$set", Value: bson.D{{"reference", -1}}}})
-	if err != nil {
-		log.WithField("id", id).Error(err)
-		return err
-	}
-
-	if result.MatchedCount < 1 {
-		log.WithField("id", id).Warning("no matched record")
-		return nil
-	}
-	return nil
-}
-
 // GetList 获取列表
 // getList	GET http://my.api.url/posts?sort=["title","ASC"]&range=[0, 24]&filter={"title":"bar"}
 func (m *Model) GetList(ctx context.Context, merchantID string, accountID string, urlParams *rest.UrlParams) ([]*Model, int64, error) {
@@ -204,7 +158,8 @@ func (m *Model) GetList(ctx context.Context, merchantID string, accountID string
 	// 定义基本过滤规则
 	// 以商户id为基本命名空间
 	// 并且只能看到小于等于自己的级别的数据
-	filters := bson.D{{Key: "merchant_id", Value: merchantID}, {"access_level", bson.D{{"$lte", m.AccessLevel}}}}
+	filters := bson.D{{Key: "meta.merchant_id", Value: merchantID},
+		{"meta.access_level", bson.D{{"$lte", m.Meta.AccessLevel}}}}
 	// 添加更多过滤器
 	// 根据用户规则进行筛选
 	for key, val := range urlParams.FilterMap {
@@ -230,7 +185,7 @@ func (m *Model) GetList(ctx context.Context, merchantID string, accountID string
 
 	// 添加状态过滤器
 	if urlParams.HasFilter {
-		filterByStatus := bson.E{Key: "status", Value: urlParams.FilterCommon.Status}
+		filterByStatus := bson.E{Key: "meta.status", Value: urlParams.FilterCommon.Status}
 		filters = append(filters, filterByStatus)
 	}
 
@@ -276,4 +231,51 @@ func (m *Model) GetList(ctx context.Context, merchantID string, accountID string
 	}
 	return results, totalCounter, nil
 
+}
+
+// FindByPhone 通过手机号查找到账号信息
+func (m *Model) FindByPhone(ctx context.Context) (*Model, error) {
+	coll := db.MDB.Collection(m.CollectionName())
+	// 更新数据库
+	result := &Model{}
+	filter := bson.D{{Key: "phone", Value: m.Phone}}
+	err := coll.FindOne(ctx, filter).Decode(result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// FindByAccountId 通过手机号查找到账号信息
+func (m *Model) FindByAccountId(ctx context.Context) (*Model, error) {
+	coll := db.MDB.Collection(m.CollectionName())
+	// 更新数据库
+	result := &Model{}
+	filter := bson.D{{Key: "meta.account_id", Value: m.Meta.AccountID}}
+	err := coll.FindOne(ctx, filter).Decode(result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// UpdateById 通过id更新数据库
+// 直接使用mongo的id进行更新
+// 这种情况一般用于先通过其他字段，例如phone 查找到记录
+// 通过读取记录中的_id 进行更新
+func (m *Model) UpdateById(ctx context.Context) error {
+	coll := db.MDB.Collection(m.CollectionName())
+	// 更新数据库
+	m.Meta.UpdatedAt = rtime.FomratTimeAsReader(time.Now().Unix())
+	filter := bson.D{{Key: "_id", Value: m.ID}}
+	result, err := coll.UpdateOne(ctx, filter,
+		bson.D{{Key: "$set", Value: m}})
+	if err != nil {
+		return err
+	}
+	if result.MatchedCount < 1 {
+		log.WithField("id", m.ID).Warning("no matched record")
+		return nil
+	}
+	return nil
 }
