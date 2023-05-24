@@ -185,8 +185,12 @@ func (m *Model) GetList(ctx context.Context, merchantID string, accountID string
 
 	// 添加状态过滤器
 	if urlParams.HasFilter {
-		filterByStatus := bson.E{Key: "meta.status", Value: urlParams.FilterCommon.Status}
-		filters = append(filters, filterByStatus)
+		// 添加状态过滤
+		//filterByStatus := bson.E{Key: "meta.status", Value: urlParams.FilterCommon.Status}
+		//filters = append(filters, filterByStatus)
+		// 添加分类过滤
+		filterByCategory := bson.E{Key: "category", Value: urlParams.FilterCommon.CategoryID}
+		filters = append(filters, filterByCategory)
 	}
 
 	logCtx.WithField("filters", filters).Debug("final filters has been combine")

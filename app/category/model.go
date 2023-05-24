@@ -1,6 +1,9 @@
 package category
 
-import "github.com/r2day/auth"
+import (
+	"github.com/r2day/auth"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 const (
 	// CollectionNamePrefix 数据库表前缀
@@ -22,7 +25,11 @@ const (
 
 // Model 模型
 type Model struct {
-	auth.MetaModel
+	// 基本的数据库模型字段，一般情况所有model都应该包含如下字段
+	// 创建时（用户上传的数据为空，所以默认可以不传该值)
+	ID primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	// 基本的数据库模型字段，一般情况所有model都应该包含如下字段
+	Meta auth.MetaModel `json:"meta" bson:"meta"`
 	// 名称
 	Name string `json:"name" bson:"name"`
 	// 描述
