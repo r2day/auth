@@ -2,11 +2,9 @@ package auth
 
 import (
 	"context"
-	"log"
-	"os"
-
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
 )
 
 var (
@@ -14,8 +12,7 @@ var (
 )
 
 // New 创建新连接池
-func New(dbName string) {
-	uri := os.Getenv("MONGODB_URI")
+func New(dbName string, uri string) {
 	if uri == "" {
 		log.Fatal("You must set your 'MONGODB_URI' environmental variable. See\n\t https://www.mongodb.com/docs/drivers/go/current/usage-examples/#environment-variable")
 	}
