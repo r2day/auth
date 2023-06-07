@@ -1,4 +1,4 @@
-package category
+package config
 
 import (
 	"github.com/r2day/auth"
@@ -12,7 +12,7 @@ const (
 	collectionNamePrefix = "auth_"
 	// CollectionNameSuffix 后缀
 	// 例如, _log, _config, _flow,
-	collectionNameSuffix = "_category"
+	collectionNameSuffix = "_config"
 	// 这个需要用户根据具体业务完成设定
 	modelName = "account"
 )
@@ -30,10 +30,27 @@ type Model struct {
 	ID primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	// 基本的数据库模型字段，一般情况所有model都应该包含如下字段
 	Meta auth.MetaModel `json:"meta" bson:"meta"`
-	// 名称
-	Name string `json:"name" bson:"name"`
+	// 分类/ 亦或则是分组等
+	Category string `json:"category" bson:"category"`
+	// IsAdmin 是否是管理员
+	// 一般standalone 模式下，是通过读取部署时配置的 ADMIN_PHONE
+	// 如果与配置的手机号匹配，那么就可以定义为管理员
+	// 如果是其他的模式，一般需要超级商户平台授权后才能成为管理员
+	IsAdmin bool `json:"is_admin"  bson:"is_admin"`
+	// 关键信息
+	// 手机号
+	Phone string `json:"phone"`
+	// 密码
+	Password string `json:"password"  bson:"password"`
+	// 是否开启审核
+	IsRequiredApprove bool `json:"is_required_approve" bson:"is_required_approve"`
+	// 更多信息
+	// 账号名称
+	Name string `json:"name"`
 	// 描述
-	Desc string `json:"desc" bson:"desc"`
-	// 引用次数
-	Reference uint `json:"reference" bson:"reference"`
+	Desc string `json:"desc"  bson:"desc"`
+	// 邮箱
+	Email string `json:"email"  bson:"email"`
+	// 角色名称列表
+	Roles []string `json:"roles"  bson:"roles"`
 }

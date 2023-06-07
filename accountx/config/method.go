@@ -2,16 +2,17 @@ package config
 
 import (
 	"context"
-	"github.com/r2day/auth/account/category"
 	"time"
 
 	db "github.com/r2day/auth"
 	rtime "github.com/r2day/base/time"
 	"github.com/r2day/rest"
 	log "github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // ResourceName 返回资源名称
@@ -41,14 +42,6 @@ func (m *Model) Create(ctx context.Context) (string, error) {
 		return "", err
 	}
 	stringObjectID := result.InsertedID.(primitive.ObjectID).Hex()
-
-	// 更新引用次数
-	cg := &category.Model{}
-	err = cg.IncrementReference(ctx, m.Category)
-	if err != nil {
-		log.WithField("m", m).Error(err)
-		return "", err
-	}
 	return stringObjectID, nil
 }
 
@@ -72,14 +65,6 @@ func (m *Model) Delete(ctx context.Context, id string) error {
 	if result.DeletedCount < 1 {
 		logCtx.Warning("result.DeletedCount < 1")
 		return nil
-	}
-
-	// 更新引用次数
-	cg := &category.Model{}
-	err = cg.DecrementReference(ctx, m.Category)
-	if err != nil {
-		log.WithField("m", m).Error(err)
-		return err
 	}
 	return nil
 }
@@ -163,28 +148,71 @@ func (m *Model) Update(ctx context.Context, id string) error {
 
 // GetList 获取列表
 // getList	GET http://my.api.url/posts?sort=["title","ASC"]&range=[0, 24]&filter={"title":"bar"}
-func (m *Model) GetList(ctx context.Context, merchantID string, accountID string, p *rest.Params) ([]*Model, int64, error) {
+func (m *Model) GetList(ctx context.Context, merchantID string, accountID string, urlParams *rest.UrlParams) ([]*Model, int64, error) {
 	coll := db.MDB.Collection(m.CollectionName())
 	// 声明需要返回的列表
 	results := make([]*Model, 0)
 	// 声明日志基本信息
-	logCtx := log.WithField("merchantID", merchantID).WithField("urlParams", p)
+	logCtx := log.WithField("merchantID", merchantID).WithField("urlParams.FilterMap", urlParams.FilterMap)
 	// 声明数据库过滤器
 	// 定义基本过滤规则
 	// 以商户id为基本命名空间
 	// 并且只能看到小于等于自己的级别的数据
-	opt := p.ToMongoOptions()
-	filters := p.ToMongoFilter(merchantID, m.Meta.AccessLevel)
+	filters := bson.D{{Key: "meta.merchant_id", Value: merchantID},
+		{"meta.access_level", bson.D{{"$lte", m.Meta.AccessLevel}}}}
+	// 添加更多过滤器
+	// 根据用户规则进行筛选
+	for key, val := range urlParams.FilterMap {
+		// 判断是否是通过id查询
+		// 则进行转换
+		// 一般对应于 ReferenceArrayInput 和 ReferenceManyField
+		if m.ResourceName() == key || key == "id" {
+			// string to array
+			results, err := m.GetMany(ctx, val)
+			if err != nil {
+				logCtx.Error(err)
+				return nil, 0, err
+			}
+			logCtx.WithField("results", results).Warning("is reference request")
+			return results, int64(len(results)), nil
+		}
 
-	logCtx.WithField("filer -->", filters).WithField("client_filter", p.Filter).
-		WithField("opt", opt).Info("~~~~~~~~~~~~~~~~~~~")
+		// 用户可以指定accountId
+		bm := bson.E{Key: key, Value: val}
+		filters = append(filters, bm)
 
-	//// 获取总数（含过滤规则）
+	}
+
+	// 添加状态过滤器
+	if urlParams.HasFilter {
+		filterByStatus := bson.E{Key: "meta.status", Value: urlParams.FilterCommon.Status}
+		filters = append(filters, filterByStatus)
+	}
+
+	logCtx.WithField("filters", filters).Debug("final filters has been combine")
+	// 获取总数（含过滤规则）
 	totalCounter, err := coll.CountDocuments(context.TODO(), filters)
 	if err == mongo.ErrNoDocuments {
 		logCtx.Error(err)
 		return nil, 0, err
 	}
+	if err != nil {
+		logCtx.Error(err)
+		return nil, 0, err
+	}
+
+	// 进行必要分页处理
+	opt := options.Find()
+	// 排序方式
+	if urlParams.Sort.SortType == rest.AES {
+		opt.SetSort(bson.M{urlParams.Sort.Key: -1})
+	} else {
+		opt.SetSort(bson.M{urlParams.Sort.Key: 1})
+	}
+
+	opt.SetSkip(int64(urlParams.Range.Offset))
+	opt.SetLimit(int64(urlParams.Range.Limit))
+
 	// 获取数据列表
 	cursor, err := coll.Find(ctx, filters, opt)
 	if err == mongo.ErrNoDocuments {

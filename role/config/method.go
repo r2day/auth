@@ -173,66 +173,18 @@ func (m *Model) GetList(ctx context.Context, merchantID string, accountID string
 	// 定义基本过滤规则
 	// 以商户id为基本命名空间
 	// 并且只能看到小于等于自己的级别的数据
-	//filters := bson.D{{Key: "meta.merchant_id", Value: merchantID},
-	//	{"meta.access_level", bson.D{{"$lte", m.Meta.AccessLevel}}}}
 	opt := p.ToMongoOptions()
 	filters := p.ToMongoFilter(merchantID, m.Meta.AccessLevel)
 
 	logCtx.WithField("filer -->", filters).WithField("client_filter", p.Filter).
 		WithField("opt", opt).Info("~~~~~~~~~~~~~~~~~~~")
-	// 添加更多过滤器
-	// 根据用户规则进行筛选
-	//for key, val := range urlParams.FilterMap {
-	//	// 判断是否是通过id查询
-	//	// 则进行转换
-	//	// 一般对应于 ReferenceArrayInput 和 ReferenceManyField
-	//	if m.ResourceName() == key || key == "id" {
-	//		// string to array
-	//		results, err := m.GetMany(ctx, val)
-	//		if err != nil {
-	//			logCtx.Error(err)
-	//			return nil, 0, err
-	//		}
-	//		logCtx.WithField("results", results).Warning("is reference request")
-	//		return results, int64(len(results)), nil
-	//	}
-	//
-	//	// 用户可以指定accountId
-	//	bm := bson.E{Key: key, Value: val}
-	//	filters = append(filters, bm)
-	//
-	//}
 
-	// 添加状态过滤器
-	//if urlParams.HasFilter {
-	//	filterByStatus := bson.E{Key: "meta.status", Value: urlParams.FilterCommon.Status}
-	//	filters = append(filters, filterByStatus)
-	//}
-	//
-	//logCtx.WithField("filters", filters).Debug("final filters has been combine")
 	//// 获取总数（含过滤规则）
 	totalCounter, err := coll.CountDocuments(context.TODO(), filters)
 	if err == mongo.ErrNoDocuments {
 		logCtx.Error(err)
 		return nil, 0, err
 	}
-	//if err != nil {
-	//	logCtx.Error(err)
-	//	return nil, 0, err
-	//}
-
-	// 进行必要分页处理
-	//opt := options.Find()
-	//// 排序方式
-	//if urlParams.Sort.SortType == rest.AES {
-	//	opt.SetSort(bson.M{urlParams.Sort.Key: -1})
-	//} else {
-	//	opt.SetSort(bson.M{urlParams.Sort.Key: 1})
-	//}
-	//
-	//opt.SetSkip(int64(urlParams.Range.Offset))
-	//opt.SetLimit(int64(urlParams.Range.Limit))
-
 	// 获取数据列表
 	cursor, err := coll.Find(ctx, filters, opt)
 	if err == mongo.ErrNoDocuments {

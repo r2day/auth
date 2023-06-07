@@ -38,7 +38,9 @@ type Model struct {
 	Category string `json:"category" bson:"category"`
 	// 图片
 	Image string `json:"image" bson:"image"`
-	// 应用列表
+	// 工具列表
+	Toolbar int `json:"toolbar" bson:"toolbar"`
+	// 应用列表 toolbar
 	// 存储应用的id
 	// 通过应用id 快速获得应用列表
 	Apps []string `json:"apps" bson:"apps"`
