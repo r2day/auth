@@ -12,7 +12,7 @@ var (
 )
 
 // New 创建新连接池
-func New(dbName string, uri string) {
+func New(uri string, dbName string) {
 	if uri == "" {
 		log.Fatal("You must set your 'MONGODB_URI' environmental variable. See\n\t https://www.mongodb.com/docs/drivers/go/current/usage-examples/#environment-variable")
 	}
