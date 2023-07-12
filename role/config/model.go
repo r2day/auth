@@ -1,6 +1,7 @@
 package config
 
 import (
+	auth2 "github.com/open4go/auth"
 	"github.com/r2day/auth"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -46,6 +47,8 @@ type Model struct {
 	Apps []string `json:"apps" bson:"apps"`
 	// 权限
 	Permissions []PermissionsModel `json:"permissions" bson:"permissions"`
+
+	PermissionsV2 []auth2.PermissionsModel `json:"permissions_v2" bson:"permissions_v2"`
 }
 
 // PermissionsModel 模型
