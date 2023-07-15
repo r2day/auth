@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/r2day/base v1.6.7
 	github.com/r2day/collections v1.1.3
-	github.com/r2day/rest v0.2.8
+	github.com/r2day/rest v0.3.0
 	github.com/sirupsen/logrus v1.9.3
 	go.mongodb.org/mongo-driver v1.12.0
 )
@@ -33,6 +33,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
 	github.com/open4go/auth v0.0.0-20230624173956-b0337a283ea6 // indirect
+	github.com/open4go/decoder v0.0.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/r2day/db v0.3.5 // indirect
@@ -54,4 +55,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/r2day/rest => ../rest
+//replace github.com/r2day/rest => ../rest
+
+//replace github.com/open4go/decoder => ../../open4go/decoder

@@ -2,11 +2,11 @@ package category
 
 import (
 	"context"
+	"github.com/open4go/decoder"
 	"time"
 
 	db "github.com/r2day/auth"
 	rtime "github.com/r2day/base/time"
-	"github.com/r2day/rest"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -115,6 +115,34 @@ func (m *Model) GetMany(ctx context.Context, ids []*primitive.ObjectID) ([]*Mode
 	return results, int64(len(ids)), nil
 }
 
+// GetByReference 获取条件查询的结果
+// getMany	GET http://my.api.url/posts?filter={"ids":[123,456,789]}
+func (m *Model) GetByReference(ctx context.Context, d *decoder.UrlQuery) ([]*Model, int64, error) {
+	// TODO result using custom struct instead of bson.M
+	// because you should avoid to export something to customers
+	coll := db.MDB.Collection(m.CollectionName())
+	// 绑定查询结果
+	results := make([]*Model, 0)
+	//logCtx := log.WithField("ids", ids)
+	filterIn := d.ReferenceByMany()
+	//filterFields := []string{"category_id"}
+	//d = d.Translate("category_id", "category")
+	filters := d.AsMongoFilterIn(filterIn)
+
+	cursor, err := coll.Find(ctx, filters)
+
+	if err != nil {
+		//logCtx.Error(err)
+		return nil, 0, err
+	}
+
+	if err = cursor.All(ctx, &results); err != nil {
+		//logCtx.Error(err)
+		return nil, 0, err
+	}
+	return results, int64(len(results)), nil
+}
+
 // Update 更新
 // update	PUT http://my.api.url/posts/123
 func (m *Model) Update(ctx context.Context, id string) error {
@@ -186,45 +214,48 @@ func (m *Model) DecrementReference(ctx context.Context, id string) error {
 
 // GetList 获取列表
 // getList	GET http://my.api.url/posts?sort=["title","ASC"]&range=[0, 24]&filter={"title":"bar"}
-func (m *Model) GetList(ctx context.Context, merchantID string, accountID string, p *rest.Params) ([]*Model, int64, error) {
+func (m *Model) GetList(ctx context.Context, d *decoder.UrlQuery) ([]*Model, int64, error) {
 	coll := db.MDB.Collection(m.CollectionName())
 	// 声明需要返回的列表
 	results := make([]*Model, 0)
 	// 声明日志基本信息
-	logCtx := log.WithField("merchantID", merchantID).WithField("urlParams", p)
+	//logCtx := log.WithField("merchantID", merchantID).WithField("urlParams", p)
 	// 声明数据库过滤器
 	// 定义基本过滤规则
 	// 以商户id为基本命名空间
 	// 并且只能看到小于等于自己的级别的数据
-	opt := p.ToMongoOptions()
-	filters := p.ToMongoFilter(merchantID, m.Meta.AccessLevel)
-	if p.HasFilterIn {
-		return m.GetMany(ctx, p.MongoIDList)
-	}
+	//opt := p.ToMongoOptions()
+	//filters := p.ToMongoFilter(merchantID, m.Meta.AccessLevel)
+	//if p.HasFilterIn {
+	//	return m.GetMany(ctx, p.MongoIDList)
+	//}
 
-	logCtx.WithField("filer -->", filters).WithField("client_filter", p.Filter).
-		WithField("opt", opt).Info("~~~~~~~~~~~~~~~~~~~")
-
+	//logCtx.WithField("filer -->", filters).WithField("client_filter", p.Filter).
+	//	WithField("opt", opt).Info("~~~~~~~~~~~~~~~~~~~")
+	filterMap := d.ExtractFilterAsKey2Map()
+	filterFields := []string{"category_id"}
+	d = d.Translate("category_id", "category")
+	filters := d.AsMongoFilter(filterFields, filterMap[0])
 	//// 获取总数（含过滤规则）
 	totalCounter, err := coll.CountDocuments(context.TODO(), filters)
 	if err == mongo.ErrNoDocuments {
-		logCtx.Error(err)
+		//logCtx.Error(err)
 		return nil, 0, err
 	}
 	// 获取数据列表
-	cursor, err := coll.Find(ctx, filters, opt)
+	cursor, err := coll.Find(ctx, filters)
 	if err == mongo.ErrNoDocuments {
-		logCtx.Error(err)
+		//logCtx.Error(err)
 		return nil, totalCounter, err
 	}
 
 	if err != nil {
-		logCtx.Error(err)
+		//logCtx.Error(err)
 		return nil, totalCounter, err
 	}
 
 	if err = cursor.All(context.TODO(), &results); err != nil {
-		logCtx.Error(err)
+		//logCtx.Error(err)
 		return nil, totalCounter, err
 	}
 	return results, totalCounter, nil
