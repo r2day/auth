@@ -1,9 +1,8 @@
-package config
+package category
 
 import (
 	"context"
 	"github.com/open4go/decoder"
-	"github.com/r2day/auth/role/category"
 	"time"
 
 	db "github.com/r2day/auth"
@@ -41,14 +40,6 @@ func (m *Model) Create(ctx context.Context) (string, error) {
 		return "", err
 	}
 	stringObjectID := result.InsertedID.(primitive.ObjectID).Hex()
-
-	// 更新引用次数
-	cg := &category.Model{}
-	err = cg.IncrementReference(ctx, m.Category)
-	if err != nil {
-		log.WithField("m", m).Error(err)
-		return "", err
-	}
 	return stringObjectID, nil
 }
 
@@ -72,14 +63,6 @@ func (m *Model) Delete(ctx context.Context, id string) error {
 	if result.DeletedCount < 1 {
 		logCtx.Warning("result.DeletedCount < 1")
 		return nil
-	}
-
-	// 更新引用次数
-	cg := &category.Model{}
-	err = cg.DecrementReference(ctx, m.Category)
-	if err != nil {
-		log.WithField("m", m).Error(err)
-		return err
 	}
 	return nil
 }
@@ -111,31 +94,25 @@ func (m *Model) GetOne(ctx context.Context, id string) (*Model, error) {
 
 // GetMany 获取条件查询的结果
 // getMany	GET http://my.api.url/posts?filter={"ids":[123,456,789]}
-func (m *Model) GetMany(ctx context.Context, ids []string) ([]*Model, error) {
+func (m *Model) GetMany(ctx context.Context, ids []*primitive.ObjectID) ([]*Model, int64, error) {
 	// TODO result using custom struct instead of bson.M
 	// because you should avoid to export something to customers
 	coll := db.MDB.Collection(m.CollectionName())
 	// 绑定查询结果
 	results := make([]*Model, 0)
-	objIds := make([]*primitive.ObjectID, 0)
 	logCtx := log.WithField("ids", ids)
-
-	for _, i := range ids {
-		objID, _ := primitive.ObjectIDFromHex(i)
-		objIds = append(objIds, &objID)
-	}
-	cursor, err := coll.Find(ctx, bson.M{"_id": bson.M{"$in": objIds}})
+	cursor, err := coll.Find(ctx, bson.M{"_id": bson.M{"$in": ids}})
 
 	if err != nil {
 		logCtx.Error(err)
-		return nil, err
+		return nil, 0, err
 	}
 
 	if err = cursor.All(ctx, &results); err != nil {
 		logCtx.Error(err)
-		return nil, err
+		return nil, 0, err
 	}
-	return results, nil
+	return results, int64(len(ids)), nil
 }
 
 // Update 更新
@@ -161,9 +138,55 @@ func (m *Model) Update(ctx context.Context, id string) error {
 	return nil
 }
 
+// IncrementReference 更新
+// https://www.mongodb.com/docs/manual/reference/operator/update/inc/
+func (m *Model) IncrementReference(ctx context.Context, id string) error {
+	coll := db.MDB.Collection(m.CollectionName())
+	objID, _ := primitive.ObjectIDFromHex(id)
+	filter := bson.D{{Key: "_id", Value: objID}}
+	// 设定更新时间
+	m.Meta.UpdatedAt = rtime.FomratTimeAsReader(time.Now().Unix())
+
+	result, err := coll.UpdateOne(ctx, filter,
+		bson.D{{Key: "$set", Value: bson.D{{"reference", 1}}}})
+	if err != nil {
+		log.WithField("id", id).Error(err)
+		return err
+	}
+
+	if result.MatchedCount < 1 {
+		log.WithField("id", id).Warning("no matched record")
+		return nil
+	}
+	return nil
+}
+
+// DecrementReference 更新
+// https://www.mongodb.com/docs/manual/reference/operator/update/inc/
+func (m *Model) DecrementReference(ctx context.Context, id string) error {
+	coll := db.MDB.Collection(m.CollectionName())
+	objID, _ := primitive.ObjectIDFromHex(id)
+	filter := bson.D{{Key: "_id", Value: objID}}
+	// 设定更新时间
+	m.Meta.UpdatedAt = rtime.FomratTimeAsReader(time.Now().Unix())
+
+	result, err := coll.UpdateOne(ctx, filter,
+		bson.D{{Key: "$set", Value: bson.D{{"reference", -1}}}})
+	if err != nil {
+		log.WithField("id", id).Error(err)
+		return err
+	}
+
+	if result.MatchedCount < 1 {
+		log.WithField("id", id).Warning("no matched record")
+		return nil
+	}
+	return nil
+}
+
 // GetList 获取列表
 // getList	GET http://my.api.url/posts?sort=["title","ASC"]&range=[0, 24]&filter={"title":"bar"}
-func (m *Model) GetList2(ctx context.Context, merchantID string, d *decoder.UrlQuery) ([]*Model, int64, error) {
+func (m *Model) GetList(ctx context.Context, merchantID string, d *decoder.UrlQuery) ([]*Model, int64, error) {
 	coll := db.MDB.Collection(m.CollectionName())
 	// 声明需要返回的列表
 	results := make([]*Model, 0)
@@ -173,7 +196,6 @@ func (m *Model) GetList2(ctx context.Context, merchantID string, d *decoder.UrlQ
 	// 定义基本过滤规则
 	// 以商户id为基本命名空间
 	// 并且只能看到小于等于自己的级别的数据
-	//opt := p.ToMongoOptions()
 	filterMap := d.ExtractFilterAsKey2Map()
 	filterFields := []string{"category_id"}
 	d = d.Translate("category_id", "category")
@@ -205,67 +227,4 @@ func (m *Model) GetList2(ctx context.Context, merchantID string, d *decoder.UrlQ
 		return nil, totalCounter, err
 	}
 	return results, totalCounter, nil
-
-}
-
-// GetList 获取列表
-// getList	GET http://my.api.url/posts?sort=["title","ASC"]&range=[0, 24]&filter={"title":"bar"}
-func (m *Model) GetList(ctx context.Context, d *decoder.UrlQuery) ([]*Model, int64, error) {
-	coll := db.MDB.Collection(m.CollectionName())
-	// 声明需要返回的列表
-	results := make([]*Model, 0)
-	filterMap := d.ExtractFilterAsKey2Map()
-	filterFields := []string{"category_id"}
-	d = d.Translate("category_id", "category")
-	filters := d.AsMongoFilter(filterFields, filterMap[0])
-	// 获取总数（含过滤规则）
-	totalCounter, err := coll.CountDocuments(context.TODO(), filters)
-	if err == mongo.ErrNoDocuments {
-		return nil, 0, err
-	}
-	// 获取数据列表
-	cursor, err := coll.Find(ctx, filters)
-	if err == mongo.ErrNoDocuments {
-		return nil, totalCounter, err
-	}
-
-	if err != nil {
-		//logCtx.Error(err)
-		return nil, totalCounter, err
-	}
-
-	if err = cursor.All(context.TODO(), &results); err != nil {
-		//logCtx.Error(err)
-		return nil, totalCounter, err
-	}
-	return results, totalCounter, nil
-}
-
-// GetByReference 获取条件查询的结果
-// getMany	GET http://my.api.url/posts?filter={"ids":[123,456,789]}
-func (m *Model) GetByReference(ctx context.Context, d *decoder.UrlQuery) ([]*Model, int64, error) {
-	// TODO result using custom struct instead of bson.M
-	// because you should avoid to export something to customers
-	coll := db.MDB.Collection(m.CollectionName())
-	// 绑定查询结果
-	results := make([]*Model, 0)
-	//logCtx := log.WithField("ids", ids)
-	filterIn := d.ReferenceByMany()
-	//filterFields := []string{"roles"}
-	//d = d.Translate("category_id", "category")
-	filters := d.AsMongoFilterIn(filterIn)
-
-	log.WithField("filters", filters).Warning("============")
-	cursor, err := coll.Find(ctx, filters)
-
-	if err != nil {
-		//logCtx.Error(err)
-		return nil, 0, err
-	}
-
-	if err = cursor.All(ctx, &results); err != nil {
-		//logCtx.Error(err)
-		return nil, 0, err
-	}
-	return results, int64(len(results)), nil
 }

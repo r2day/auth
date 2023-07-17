@@ -89,6 +89,7 @@ func (m *Model) GetOne(ctx context.Context, id string) (*Model, error) {
 		logCtx.Error(err)
 		return nil, err
 	}
+
 	return result, nil
 }
 
@@ -218,34 +219,18 @@ func (m *Model) GetList(ctx context.Context, d *decoder.UrlQuery) ([]*Model, int
 	coll := db.MDB.Collection(m.CollectionName())
 	// 声明需要返回的列表
 	results := make([]*Model, 0)
-	// 声明日志基本信息
-	//logCtx := log.WithField("merchantID", merchantID).WithField("urlParams", p)
-	// 声明数据库过滤器
-	// 定义基本过滤规则
-	// 以商户id为基本命名空间
-	// 并且只能看到小于等于自己的级别的数据
-	//opt := p.ToMongoOptions()
-	//filters := p.ToMongoFilter(merchantID, m.Meta.AccessLevel)
-	//if p.HasFilterIn {
-	//	return m.GetMany(ctx, p.MongoIDList)
-	//}
-
-	//logCtx.WithField("filer -->", filters).WithField("client_filter", p.Filter).
-	//	WithField("opt", opt).Info("~~~~~~~~~~~~~~~~~~~")
 	filterMap := d.ExtractFilterAsKey2Map()
 	filterFields := []string{"category_id"}
 	d = d.Translate("category_id", "category")
 	filters := d.AsMongoFilter(filterFields, filterMap[0])
-	//// 获取总数（含过滤规则）
+	// 获取总数（含过滤规则）
 	totalCounter, err := coll.CountDocuments(context.TODO(), filters)
 	if err == mongo.ErrNoDocuments {
-		//logCtx.Error(err)
 		return nil, 0, err
 	}
 	// 获取数据列表
 	cursor, err := coll.Find(ctx, filters)
 	if err == mongo.ErrNoDocuments {
-		//logCtx.Error(err)
 		return nil, totalCounter, err
 	}
 
