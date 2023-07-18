@@ -1,7 +1,8 @@
-package category
+package manage
 
 import (
 	"github.com/open4go/model"
+	"github.com/r2day/collections"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -12,7 +13,7 @@ const (
 	collectionNamePrefix = "auth_"
 	// CollectionNameSuffix 后缀
 	// 例如, _log, _config, _flow,
-	collectionNameSuffix = "_category"
+	collectionNameSuffix = "_manage"
 	// 这个需要用户根据具体业务完成设定
 	modelName = "app"
 )
@@ -32,8 +33,10 @@ type Model struct {
 	ID primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	// 名称
 	Name string `json:"name" bson:"name"`
-	// 描述
+	// 应用描述
 	Desc string `json:"desc" bson:"desc"`
-	// 引用次数
-	Reference uint `json:"reference" bson:"reference"`
+	// 分类/ 亦或则是分组等
+	Category string `json:"category" bson:"category"`
+	// AccessApi 可访问的api列表
+	AccessAPI []collections.APIInfo `json:"access_api"  bson:"access_api"`
 }
