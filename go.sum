@@ -84,6 +84,8 @@ github.com/open4go/auth v0.0.0-20230624173956-b0337a283ea6/go.mod h1:LUatKWdiga2
 github.com/open4go/decoder v0.0.0-20230715032634-b95d0415fc78 h1:EcgXRP7US66YKHffahCnlbuMRparaPy/Zjm6gDC5Hwc=
 github.com/open4go/decoder v0.0.0-20230715032634-b95d0415fc78/go.mod h1:Tp29Wgi0i+U2ZhBNDY/pBviOlTmk6NnyQro7xCj1Wbg=
 github.com/open4go/decoder v0.0.1/go.mod h1:Tp29Wgi0i+U2ZhBNDY/pBviOlTmk6NnyQro7xCj1Wbg=
+github.com/open4go/decoder v0.0.4 h1:fTS0Soz80Q6WBwcdm6W4iufyS7XcDvK7MHSWYplvxqY=
+github.com/open4go/decoder v0.0.4/go.mod h1:Tp29Wgi0i+U2ZhBNDY/pBviOlTmk6NnyQro7xCj1Wbg=
 github.com/open4go/model v0.0.1 h1:rkDivLm8Ey/dOg803ABysbNfv+kHcUQCE6Gro+Q+SzI=
 github.com/open4go/model v0.0.1/go.mod h1:5BhWFnfhq6PWuwk+qckuF5231/A2/TBOX9Lm/+RTfio=
 github.com/open4go/model v0.0.2 h1:+XebHG4hFKCJ4WnV6KsbvDZX45JycoKRhMWsKBM1lWQ=
