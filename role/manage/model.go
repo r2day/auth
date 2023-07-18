@@ -1,8 +1,8 @@
-package config
+package manage
 
 import (
 	auth2 "github.com/open4go/auth"
-	"github.com/r2day/auth"
+	"github.com/open4go/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -13,7 +13,7 @@ const (
 	collectionNamePrefix = "auth_"
 	// CollectionNameSuffix 后缀
 	// 例如, _log, _config, _flow,
-	collectionNameSuffix = "_config"
+	collectionNameSuffix = "_manage"
 	// 这个需要用户根据具体业务完成设定
 	modelName = "role"
 )
@@ -26,11 +26,11 @@ const (
 
 // Model 模型
 type Model struct {
+	// 继承
+	model.Model
 	// 基本的数据库模型字段，一般情况所有model都应该包含如下字段
 	// 创建时（用户上传的数据为空，所以默认可以不传该值)
 	ID primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	// 基本的数据库模型字段，一般情况所有model都应该包含如下字段
-	Meta auth.MetaModel `json:"meta" bson:"meta"`
 	// 名称
 	Name string `json:"name" bson:"name"`
 	// 描述
@@ -47,25 +47,4 @@ type Model struct {
 	Apps []string `json:"apps" bson:"apps"`
 
 	PermissionsV2 []auth2.PermissionsModel `json:"permissions_v2" bson:"permissions_v2"`
-}
-
-// PermissionsModel 模型
-// 记录角色对接口的操作细节
-type PermissionsModel struct {
-	// 角色编号
-	RoleID string `json:"role_id" bson:"role_id"`
-	// 应用编号
-	AppID string `json:"app_id" bson:"app_id"`
-	// 请求路径
-	Path string `json:"path" bson:"path"`
-	// 读
-	Read bool `json:"read" bson:"read"`
-	// 写
-	Write bool `json:"write" bson:"write"`
-	// 改
-	Update bool `json:"update" bson:"update"`
-	// 详情
-	Detail bool `json:"detail" bson:"detail"`
-	// 删除
-	Delete bool `json:"delete" bson:"delete"`
 }
