@@ -37,6 +37,8 @@ type Model struct {
 	Desc string `json:"desc" bson:"desc"`
 	// 分类/ 亦或则是分组等
 	Category string `json:"category" bson:"category"`
+	// 前缀
+	UrlPrefix string `json:"url_prefix" bson:"url_prefix"`
 	// AccessApi 可访问的api列表
 	AccessAPI []collections.APIInfo `json:"access_api"  bson:"access_api"`
 }
