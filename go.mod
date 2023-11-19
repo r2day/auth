@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/open4go/auth v0.0.0-20230624173956-b0337a283ea6
 	github.com/open4go/decoder v0.0.4
-	github.com/open4go/model v0.0.4
+	github.com/open4go/model v0.0.6
 	github.com/r2day/base v1.6.7
 	github.com/r2day/collections v1.1.3
 	github.com/sirupsen/logrus v1.9.3

@@ -21,13 +21,13 @@ func (m *Model) CollectionName() string {
 // https://www.mongodb.com/docs/manual/reference/operator/update/inc/
 func (m *Model) IncrementReference(id string) error {
 
-	coll := m.Meta.Handler.Collection(m.Meta.Collection)
+	coll := m.Context.Handler.Collection(m.Context.Collection)
 	objID, _ := primitive.ObjectIDFromHex(id)
 	filter := bson.D{{Key: "_id", Value: objID}}
 	// 设定更新时间
 	m.Meta.UpdatedAt = rtime.FomratTimeAsReader(time.Now().Unix())
 
-	result, err := coll.UpdateOne(m.Meta.Context, filter,
+	result, err := coll.UpdateOne(m.Context.Context, filter,
 		bson.D{{Key: "$set", Value: bson.D{{"reference", 1}}}})
 	if err != nil {
 		return err
@@ -42,13 +42,13 @@ func (m *Model) IncrementReference(id string) error {
 // DecrementReference 更新
 // https://www.mongodb.com/docs/manual/reference/operator/update/inc/
 func (m *Model) DecrementReference(id string) error {
-	coll := m.Meta.Handler.Collection(m.Meta.Collection)
+	coll := m.Context.Handler.Collection(m.Context.Collection)
 	objID, _ := primitive.ObjectIDFromHex(id)
 	filter := bson.D{{Key: "_id", Value: objID}}
 	// 设定更新时间
 	m.Meta.UpdatedAt = rtime.FomratTimeAsReader(time.Now().Unix())
 
-	result, err := coll.UpdateOne(m.Meta.Context, filter,
+	result, err := coll.UpdateOne(m.Context.Context, filter,
 		bson.D{{Key: "$set", Value: bson.D{{"reference", -1}}}})
 	if err != nil {
 		return err
