@@ -44,9 +44,9 @@ type Model struct {
 	// 应用列表 toolbar
 	// 存储应用的id
 	// 通过应用id 快速获得应用列表
-	Apps []string `json:"apps" bson:"apps"`
+	//Apps []string `json:"apps" bson:"apps"`
 
-	PermissionsV2 []auth2.PermissionsModel `json:"permissions_v2" bson:"permissions_v2"`
+	//PermissionsV2 []auth2.PermissionsModel `json:"permissions_v2" bson:"permissions_v2"`
 	// 订阅应用
 	SubscribeApps []auth2.PermissionsModel `json:"subscribe_apps" bson:"subscribe_apps"`
 }

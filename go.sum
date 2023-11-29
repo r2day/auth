@@ -57,6 +57,8 @@ github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe h1:iruDEfMl2E6f
 github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe/go.mod h1:wL8QJuTMNUDYhXwkmfOly8iTdp5TEcJFWZD2D7SIkUc=
 github.com/open4go/auth v0.0.0-20230624173956-b0337a283ea6 h1:VfF01MBpSswMH95pv3HmDcQ8fT1WmrmaP0fIaJfXfAM=
 github.com/open4go/auth v0.0.0-20230624173956-b0337a283ea6/go.mod h1:LUatKWdiga2C3Alty2MzZacq8V7RhLA5S10P5dbm8pk=
+github.com/open4go/auth v0.0.6 h1:cvZIeTaQ30LJiKYR9mrNT75K7+CrTJZB0XjgRlKx2BI=
+github.com/open4go/auth v0.0.6/go.mod h1:oKrcIbJRdHPvFkvqmdrcDbCzyQVDHGJQMwXquJUif2g=
 github.com/open4go/decoder v0.0.4 h1:fTS0Soz80Q6WBwcdm6W4iufyS7XcDvK7MHSWYplvxqY=
 github.com/open4go/decoder v0.0.4/go.mod h1:Tp29Wgi0i+U2ZhBNDY/pBviOlTmk6NnyQro7xCj1Wbg=
 github.com/open4go/model v0.0.4 h1:MXftZcfyGJ1Jzui1DpPFMxOoYBKMRJxiP9LWiIASizQ=
