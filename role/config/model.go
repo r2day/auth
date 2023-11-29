@@ -47,6 +47,8 @@ type Model struct {
 	Apps []string `json:"apps" bson:"apps"`
 
 	PermissionsV2 []auth2.PermissionsModel `json:"permissions_v2" bson:"permissions_v2"`
+	// 订阅应用
+	SubscribeApps []auth2.PermissionsModel `json:"subscribe_apps" bson:"subscribe_apps"`
 }
 
 // PermissionsModel 模型
