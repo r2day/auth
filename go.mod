@@ -3,7 +3,7 @@ module github.com/r2day/auth
 go 1.20
 
 require (
-	github.com/open4go/auth v0.0.6
+	github.com/open4go/auth v0.0.5
 	github.com/open4go/decoder v0.0.4
 	github.com/open4go/model v0.0.6
 	github.com/r2day/base v1.6.7

@@ -1,4 +1,4 @@
-package manage
+package bind
 
 import (
 	auth2 "github.com/open4go/auth"
@@ -13,7 +13,7 @@ const (
 	collectionNamePrefix = "auth_"
 	// CollectionNameSuffix 后缀
 	// 例如, _log, _config, _flow,
-	collectionNameSuffix = "_manage"
+	collectionNameSuffix = "_bind"
 	// 这个需要用户根据具体业务完成设定
 	modelName = "role"
 )
@@ -30,21 +30,9 @@ type Model struct {
 	model.Model
 	// 基本的数据库模型字段，一般情况所有model都应该包含如下字段
 	// 创建时（用户上传的数据为空，所以默认可以不传该值)
-	ID primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	// 名称
-	Name string `json:"name" bson:"name"`
-	// 描述
-	Desc string `json:"desc" bson:"desc"`
-	// 分类/ 亦或则是分组等
-	Category string `json:"category" bson:"category"`
-	// 图片
-	Image string `json:"image" bson:"image"`
-	// 工具列表
-	Toolbar int `json:"toolbar" bson:"toolbar"`
-	// 应用列表 toolbar
-	// 存储应用的id
-	// 通过应用id 快速获得应用列表
-	//Apps []string `json:"apps" bson:"apps"`
-	//
-	PermissionsV2 []auth2.PermissionsModel `json:"permissions_v2" bson:"permissions_v2"`
+	ID            primitive.ObjectID     `json:"id" bson:"_id,omitempty"`
+	RoleId        string                 `json:"role_id"`
+	AppId         string                 `json:"app_id"`
+	Path          string                 `json:"path"`
+	PermissionsV2 []auth2.OperationModel `json:"permissions_v2" bson:"permissions_v2"`
 }
