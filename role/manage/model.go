@@ -46,5 +46,5 @@ type Model struct {
 	// 通过应用id 快速获得应用列表
 	Apps []string `json:"apps" bson:"apps"`
 	//
-	PermissionsV2 []auth2.PermissionsModel `json:"permissions_v2" bson:"permissions_v2"`
+	PermissionsV2 []auth2.PermissionsModel `json:"permissions_v3" bson:"permissions_v3"`
 }
