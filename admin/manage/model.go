@@ -55,4 +55,9 @@ type Model struct {
 	Roles []string `json:"roles"  bson:"roles"`
 	// IsOnline 是否在线
 	IsOnline bool `json:"is_online" bson:"-"`
+
+	OtpEnabled  bool   `json:"opt_enabled" bson:"opt_enabled"`
+	OtpVerified bool   `json:"opt_verified" bson:"opt_verified"`
+	OtpSecret   string `json:"opt_secret" bson:"opt_secret"`
+	OtpAuthUrl  string `json:"opt_auth_url" bson:"opt_auth_url"`
 }
